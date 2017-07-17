@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+	<head>
+        <style type="text/css">
+        .node {}
+        .link { stroke: #999; stroke-opacity: .6; stroke-width: 1px; }
+    </style>
+		<meta charset="utf-8">
+		<title>Force based label placement</title>
+        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	</head>
+	<body>
+<script type="text/javascript" charset="utf-8">
+
+var socket = io();
+socket.on('refresh', function(data){ 
+
+console.log(JSON.stringify(data));
+if(JSON.stringify(data).indexOf(domain) != -1)
+{
+    GetData();
+}
+
+
+});
+</script>
+
+
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.link {
+  stroke: #ccc;
+}
+
+.node text {
+  pointer-events: none;
+  font: 10px sans-serif;
+}
+
+</style>
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="https://unpkg.com/@reactivex/rxjs@5.0.1/dist/global/Rx.js"></script>
+
+<script>
+
+var domain;
+var depth;
+var currentEvent = "";
+
+
+function GetData()
+{    
+    const posts$ = $.getJSON("api/" + domain + "/" + depth).done(function(result) {
+    DrawGraph(result);
+})
+
+
+const resNode = document.getElementById('res');
+
+
+//DrawGraph(posts$);
+
+
+/*const htmlSubscription = posts$
+.subscribe(res => {
+    console.log(posts$);
+    DrawGraph(res);
+  //resNode.innerHTML = JSON.stringify(res, null, 2);
+});  */
+
+
+}
+
+var numberRun = 0;
+
+function DrawGraph(json)
+{
+
+var width = 960,
+    height = 500
+
+    if(numberRun == 0)
+    {
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+    numberRun++;
+    }else{
+
+        var svg = d3.select("body").selectAll("svg")
+        svg.remove();
+        svg = d3.select("body").append("svg")
+.attr("width", width)
+.attr("height", height);
+
+
+    }
+
+
+var force = d3.layout.force()
+    .gravity(0.05)
+    .distance(100)
+    .charge(-100)
+    .size([width, height]);
+
+
+
+//d3.json("api/" + domain + "/" + depth, function(error, json) {
+//  if (error) throw error;
+
+  force
+      .nodes(json.nodes)
+      .links(json.links)
+      .start();
+
+  var link = svg.selectAll(".link")
+      .data(json.links)
+    .enter().append("line")
+      .attr("class", "link");
+
+  var node = svg.selectAll(".node")
+      .data(json.nodes)
+    .enter().append("g")
+      .attr("class", "node")
+      .call(force.drag);
+
+  node.append("image")
+      .attr("xlink:href", "https://github.com/favicon.ico")
+      .attr("x", -8)
+      .attr("y", -8)
+      .attr("width", 16)
+      .attr("height", 16);
+
+  node.append("text")
+      .attr("dx", 12)
+      .attr("dy", ".35em")
+      .text(function(d) { return d.title });
+
+  force.on("tick", function() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+  });
+//});
+}
+</script>
+<script
+src="https://code.jquery.com/jquery-3.2.1.min.js"
+integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+crossorigin="anonymous"></script>
+
+<script>
+$(document).ready(function() {
+    $('#subButton').click(function() {
+      domain = $('#domainBox').val();
+      depth = $('#depthSelect').val();
+      GetData();
+    });
+});
+</script>
+<body>
+            Domain: <input id="domainBox" type="text" name="domain" /><br />
+            Depth: <select id="depthSelect">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                  </select>
+            <button id="subButton">Get Domains</button>
+
+            
+          
+</body>

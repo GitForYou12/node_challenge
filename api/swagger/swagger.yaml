@@ -1,0 +1,131 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Neo Test Node App
+# during dev, should point to your local machine
+host: localhost:3000
+# basePath prefixes all resource paths 
+basePath: /
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+  - application/octet-stream
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /api/{domain}/{depth}:
+    x-swagger-router-controller: domain
+    get:
+      operationId: getAllNodes
+      description: get the nodes list
+      parameters:
+        - name: domain
+          description: DomainName
+          default: murphy.net
+          type: string
+          in: path
+          required: true
+        - name: depth
+          description: neo4j depth
+          default: 1
+          type: number
+          in: path
+          required: true
+      # define the type of response for Success "200" and Error
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/GetMoviesListResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"  
+  /api:
+    # our controller name
+    x-swagger-router-controller: domain
+    put:
+      operationId: addNode
+      description: add a node
+      # movie info to be stored
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/GeneralResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    delete:
+      operationId: removeNode
+      description: delete a node
+      # define the parameters
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/GeneralResponse"
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  GetMoviesListResponse:
+    required:
+      - nodes
+    properties:
+      # The array of nodes
+      nodes:
+        type: array
+        items: 
+          type: object
+          properties: 
+            title: 
+              type: string
+            label: 
+              type: string
+            weight: 
+              type: integer
+              format: int32
+      links:
+        type: array
+        items: 
+          type: object
+          properties: 
+            source: 
+              type: integer
+              format: int32
+            target: 
+              type: integer
+              format: int32
+            weight: 
+              type: integer
+              format: int32
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  GeneralResponse:
+    type: object
+    properties:
+      success:
+        type: number
+        description: returns 1 if successful
+      description:
+        type: string
+        description: a short comment 
+    required:
+      - success
+      - description
